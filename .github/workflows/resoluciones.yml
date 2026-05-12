@@ -1,1 +1,27 @@
 
+name: Ejecutar script resoluciones
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # cada 15 minutos
+  workflow_dispatch:          # permite ejecutarlo manualmente
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Configurar Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+
+      - name: Instalar dependencias
+        run: |
+          pip install requests beautifulsoup4 pdfplumber pytesseract
+
+      - name: Ejecutar script
+        run: python monitor.py
