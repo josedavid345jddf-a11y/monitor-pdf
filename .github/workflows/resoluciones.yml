@@ -2,8 +2,8 @@ name: Ejecutar script resoluciones
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # cada 15 minutos
-  workflow_dispatch:          # permite ejecutarlo manualmente
+    - cron: "*/15 * * * *"  
+  workflow_dispatch:          
 
 jobs:
   run-script:
