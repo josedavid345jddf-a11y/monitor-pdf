@@ -166,6 +166,13 @@ def check_page():
         print(f"⚠️ Error al verificar la página: {e}")
 
 # Bucle infinito: revisa cada 3 minutos
-while True:
-    check_page()
-    time.sleep(180)
+#while True:
+ #   check_page()
+  #  time.sleep(180)
+
+print("\n📄 Resultados del PDF:")
+print("Número de resolución:", numero)
+print("Fecha:", fecha)
+print("Nombramiento:", nombramiento)
+print("Insubsistencia:", insubsistencia)
+print("COMUNICACIÓN:", comunicacion)
