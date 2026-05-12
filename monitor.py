@@ -30,8 +30,8 @@ archivo_resultados = "resultados.txt"
 # Configuración del correo
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-EMAIL_USER = "josedavid.345.jddf@gmail.com"
-EMAIL_PASS = "vllb qgru jzni zplw"   # contraseña de aplicación
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
 EMAIL_TO   = "jddftdm@gmail.com"
 
 # Cargar resoluciones ya notificadas
