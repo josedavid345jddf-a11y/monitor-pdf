@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-import time
 import urllib3
 import re
 import os
@@ -11,11 +10,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-from PIL import Image
-import pytesseract
-
-# Configurar ruta de Tesseract si no está en PATH
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Desactivar advertencias SSL
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -48,40 +42,27 @@ def extraer_texto(pdf_path):
             contenido = pagina.extract_text()
             if contenido:
                 texto += contenido
-            else:
-                im = pagina.to_image(resolution=200).original
-                texto += pytesseract.image_to_string(im, lang="spa")
     return texto
 
 def extraer_datos(texto_pdf, nombre_archivo):
-    # Número de resolución: probar varias formas
     match_resolucion = re.search(r"RES[-\s]*\d{4}-\d{5,7}(?:-\d+)?", texto_pdf)
     if not match_resolucion:
         match_resolucion = re.search(r"Resolución\s+No\.?\s*\d+", texto_pdf, re.IGNORECASE)
     if not match_resolucion:
         match_resolucion = re.search(r"RESOLUCIÓN\s+NÚMERO.*", texto_pdf)
-    numero = match_resolucion.group(0).strip() if match_resolucion else None
+    numero = match_resolucion.group(0).strip() if match_resolucion else "No encontrado"
 
-    # Si no se encontró en el PDF, intentar en el nombre del archivo
-    if not numero:
-        match_nombre = re.search(r"res[-_]\d+", nombre_archivo, re.IGNORECASE)
-        numero = match_nombre.group(0) if match_nombre else "No encontrado"
-
-    # Fecha
     match_fecha = re.search(r"\d{1,2}\s+de\s+\w+\s+de\s+\d{4}", texto_pdf, re.IGNORECASE)
     fecha = match_fecha.group(0) if match_fecha else "No encontrada"
 
-    # Nombramiento
     match_nom = re.search(r"(la señora|el señor)\s+([A-ZÁÉÍÓÚÑ\s]+?)(?=,)", texto_pdf)
     nombramiento = match_nom.group(2).strip() if match_nom else "No encontrado"
 
-    # Insubsistencia
     match_ins = re.search(r"insubsistente.*?(la señora|el señor)\s+([A-ZÁÉÍÓÚÑ\s]+?)(?=,)", texto_pdf, re.IGNORECASE)
     insubsistencia = match_ins.group(2).strip() if match_ins else "No encontrado"
 
-    # Comunicación: tolerante a OCR y variaciones
     match_comunicacion = re.search(
-        r"ARTÍCULO\s+SEXTO.*?(Comunicación.*?|COMUNICAR.*?|Comunicar la presente resolución.*?|Comunicar.*?)(?=ARTÍCULO|\Z)",
+        r"ARTÍCULO\s+SEXTO.*?(Comunicación.*?|COMUNICAR.*?|Comunicar.*?)(?=ARTÍCULO|\Z)",
         texto_pdf,
         re.DOTALL | re.IGNORECASE
     )
@@ -96,7 +77,6 @@ def enviar_correo(asunto, cuerpo, pdf_path):
     msg["Subject"] = asunto
     msg.attach(MIMEText(cuerpo, "plain"))
 
-    # Adjuntar PDF
     try:
         with open(pdf_path, "rb") as f:
             part = MIMEBase("application", "octet-stream")
@@ -121,14 +101,14 @@ def guardar_resultados(cuerpo):
     with open(archivo_resultados, "a", encoding="utf-8") as f:
         f.write(cuerpo + "\n" + "-"*50 + "\n")
 
-def check_page():
+def main():
     global resoluciones_notificadas
     try:
+        print("🔍 Revisando página...")
         response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # Buscar enlaces a PDFs
         enlaces_pdf = [a["href"] for a in soup.find_all("a", href=True) if a["href"].lower().endswith(".pdf")]
 
         nuevas = []
@@ -165,14 +145,5 @@ def check_page():
     except Exception as e:
         print(f"⚠️ Error al verificar la página: {e}")
 
-# Bucle infinito: revisa cada 3 minutos
-#while True:
- #   check_page()
-  #  time.sleep(180)
-
-print("\n📄 Resultados del PDF:")
-print("Número de resolución:", numero)
-print("Fecha:", fecha)
-print("Nombramiento:", nombramiento)
-print("Insubsistencia:", insubsistencia)
-print("COMUNICACIÓN:", comunicacion)
+if __name__ == "__main__":
+    main()
